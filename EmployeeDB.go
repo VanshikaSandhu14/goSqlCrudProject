@@ -28,8 +28,8 @@ type Employ struct {
 }
 
 var cfg = mysql.Config{
-	User:   //"UserName",
-	Passwd: //Passwd,
+	User:   "magicpin",
+	Passwd: "vanshika01",
 	Net:    "tcp",
 	Addr:   "127.0.0.1:3306",
 	DBName: "MySQLTestWithGO",
