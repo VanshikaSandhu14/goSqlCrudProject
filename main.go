@@ -15,8 +15,8 @@ import (
 )
 
 var cfg = mysql.Config{
-	User:   "root",
-	Passwd: "vanshika01",
+	User:   "user",
+	Passwd: "pwd",
 	Net:    "tcp",
 	Addr:   "localhost:3306",
 	DBName: "sql_go_test_project",
@@ -36,6 +36,36 @@ type sql_emp struct {
 	contact  int    `field:"contact"`
 }
 
+
+func createNewEmp(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+	fmt.Println("calling create employee method")
+
+	emp_name := req.URL.Query().Get("emp_name")
+	salary := req.URL.Query().Get("salary")
+	emp_id := req.URL.Query().Get("emp_id")
+	contact := req.URL.Query().Get("contact")
+
+	slr, _ := strconv.Atoi(salary)
+	E2 := json_emp{emp_id: emp_id, emp_name: emp_name, salary: slr, contact: 123456789}
+	fmt.Println("query0-->" + E2.emp_id)
+
+	json.NewEncoder(res).Encode(E2)
+
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer db.Close()
+	_, er := db.Exec("INSERT INTO emp_data VALUES(\"" + emp_id + "\"," + emp_name + "," + salary + "," + "\"" + contact + "\"" + ");")
+
+	if er != nil {
+		fmt.Println("Error in adding values to db\n" + er.Error())
+	}
+
+}
 
 
 func getEmpById(res http.ResponseWriter, req *http.Request) {
@@ -67,6 +97,28 @@ func getEmpById(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(E2)
 }
 
+func getEmpSal(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+	emp_name := req.URL.Query().Get("emp_name")
+
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer db.Close()
+
+	var E string
+
+	if err := db.QueryRow("SELECT salary from emp_data where emp_name = " + emp_name).Scan(&E); err != nil {
+		fmt.Printf("The given name: %v doesn't exist\n", emp_name)
+		return
+	}
+
+	json.NewEncoder(res).Encode(E)
+}
+
 func delEmp(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(req)
@@ -90,57 +142,6 @@ func delEmp(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func getEmpSal(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json")
-	emp_name := req.URL.Query().Get("emp_name")
-
-	db, err := sql.Open("mysql", cfg.FormatDSN())
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	defer db.Close()
-
-	var E string
-
-	if err := db.QueryRow("SELECT salary from emp_data where emp_name = " + emp_name).Scan(&E); err != nil {
-		fmt.Printf("The given name: %v doesn't exist\n", emp_name)
-		return
-	}
-
-	json.NewEncoder(res).Encode(E)
-}
-
-func createNewEmp(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json")
-	fmt.Println("calling create employee method")
-
-	emp_name := req.URL.Query().Get("emp_name")
-	salary := req.URL.Query().Get("salary")
-	emp_id := req.URL.Query().Get("emp_id")
-	contact := req.URL.Query().Get("contact")
-
-	slr, _ := strconv.Atoi(salary)
-	E2 := json_emp{emp_id: emp_id, emp_name: emp_name, salary: slr, contact: 123456789}
-	fmt.Println("query0-->" + E2.emp_id)
-
-	json.NewEncoder(res).Encode(E2)
-
-	db, err := sql.Open("mysql", cfg.FormatDSN())
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	defer db.Close()
-	_, er := db.Exec("INSERT INTO emp_data VALUES(\"" + emp_id + "\"," + emp_name + "," + salary + "," + "\"" + contact + "\"" + ");")
-
-	if er != nil {
-		fmt.Println("Error in adding values to db\n" + er.Error())
-	}
-
-}
 
 func main() {
 
